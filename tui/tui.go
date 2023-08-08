@@ -13,11 +13,12 @@ func DrawTitleBar(screen tcell.Screen, appname string, filename string, fileModi
 	barStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	scr_w--
 	scr_h--
-
-	titleText := "🗒 " + filename + " - " + appname
 	if fileModified {
-		titleText += " *"
+		// Add modified symbol
+		filename = "*" + filename
 	}
+	titleText := "🗒 " + filename + " - " + appname
+
 	drawText(screen, 0, 0, len(titleText), 0, barStyle, titleText)
 	drawHorizontalLine(screen, 0, scr_w, 1, barStyle)
 }
