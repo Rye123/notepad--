@@ -8,13 +8,16 @@ import (
 )
 
 // Draw Title Bar
-func DrawTitleBar(screen tcell.Screen, appname string, filename string) {
+func DrawTitleBar(screen tcell.Screen, appname string, filename string, fileModified bool) {
 	scr_w, scr_h := screen.Size()
 	barStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	scr_w--
 	scr_h--
 
 	titleText := "🗒 " + filename + " - " + appname
+	if fileModified {
+		titleText += " *"
+	}
 	drawText(screen, 0, 0, len(titleText), 0, barStyle, titleText)
 	drawHorizontalLine(screen, 0, scr_w, 1, barStyle)
 }

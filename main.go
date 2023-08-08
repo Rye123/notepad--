@@ -3,14 +3,19 @@ package main
 import (
 	"log"
 	"os"
+	"errors"
 	"github.com/Rye123/notepad--/tui"
 	"github.com/Rye123/notepad--/util"
+	"github.com/Rye123/notepad--/textbuffer"
 	"github.com/gdamore/tcell/v2"
 )
 
 const AppName = "Notepad--"
 
 func main() {
+	// Get command line arguments
+	commandArgs := os.Args
+	
 	// Initialise variables
 	filename := "Untitled"
 	cursor_x := 0
@@ -20,7 +25,25 @@ func main() {
 		Encoding: "UTF-8",
 		WordWrap: true,
 	}
-	buffer := "The quick\r\nbrown fox jumps over the lazy dog. The quick brown fox jumps over the lazy dog. Quick brown\r\nfox jumps over the lazy dog. \n\n\n\n\n\n \n\n\n\n\n\n\nThis is such a long line that we will probably have to word wrap several times but this is necessary so that i can actually test the full word wrap features and hopefully this works perfectly and i have accounted for everything. In the future, I'll probably need to probably implement WORD wrap and not CHARACTER wrap so that the word goes to the upper or lower line where necessary, but for now hopefully this suffices."
+	textbuf := textbuffer.NewGapBuffer()
+	saved:= false
+	if len(commandArgs) > 1 {
+		filename = commandArgs[1]
+		// Read file if given
+		data, err := os.ReadFile(filename)
+		if err != nil {
+			if errors.Is(err, os.ErrNotExist) {
+				// File doesn't exist yet.
+				saved = false
+			} else {
+				log.Fatalf("%+v", err)
+			}
+		} else {
+			saved = true
+			// Load data into buffer
+			textbuf.Append(string(data))
+		}
+	}
 	
 	// Initialise screen
 	screen, err := tcell.NewScreen()
@@ -70,11 +93,11 @@ func main() {
 		// Draw Screen
 		screen.Clear()
 		//// TUI
-		tui.DrawTitleBar(screen, AppName, filename)
+		tui.DrawTitleBar(screen, AppName, filename, !saved)
 		tui.DrawMenuBar(screen)
 		tui.DrawStatusBar(screen, cursor_x, cursor_y, options)
 
-		tui.DrawTextBox(screen, cursor_x, cursor_y, options, buffer)
+		tui.DrawTextBox(screen, cursor_x, cursor_y, options, textbuf.String())
 		
 		screen.Show()
 		
