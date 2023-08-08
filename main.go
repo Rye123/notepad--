@@ -18,8 +18,6 @@ func main() {
 	
 	// Initialise variables
 	filename := "Untitled"
-	cursor_x := 0
-	cursor_y := 0
 	options := util.Options{
 		LineEndMode: "CRLF",
 		Encoding: "UTF-8",
@@ -56,6 +54,7 @@ func main() {
 	// Set Default Text Style
 	defaultStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	screen.SetStyle(defaultStyle)
+	screen.SetCursorStyle(tcell.CursorStyleDefault)
 
 	// Setup Screen
 	screen.Clear()
@@ -64,6 +63,7 @@ func main() {
 	quit := func() {
 		// Catch panics
 		maybePanic := recover()
+		screen.SetCursorStyle(tcell.CursorStyleDefault)
 		screen.Fini()
 
 		if maybePanic != nil {
@@ -72,6 +72,8 @@ func main() {
 		os.Exit(0)
 	}
 	defer quit()
+
+	screen.SetCursorStyle(tcell.CursorStyleBlinkingBar)
 
 renderLoop:
 	for {
@@ -86,6 +88,14 @@ renderLoop:
 			// Note: SHIFT doesn't appear to work.
 			_, key, _ := eventType.Modifiers(), eventType.Key(), eventType.Rune()
 
+			// Arrow Keys
+			if key == tcell.KeyLeft {
+				textbuf.MoveIndex(textbuf.GetIndex() - 1)
+			}
+			if key == tcell.KeyRight {
+				textbuf.MoveIndex(textbuf.GetIndex() + 1)
+			}
+			
 			// Ctrl-W: Exit (if no more tabs left)
 			if key == tcell.KeyCtrlW {
 				break renderLoop
@@ -103,9 +113,8 @@ renderLoop:
 		//// TUI
 		tui.DrawTitleBar(screen, AppName, filename, fileModified)
 		tui.DrawMenuBar(screen)
-		tui.DrawStatusBar(screen, cursor_x, cursor_y, options)
 
-		tui.DrawTextBox(screen, cursor_x, cursor_y, options, textbuf.String())
+		tui.DrawTextBox(screen, textbuf.GetIndex(), options, textbuf.String())
 		
 		screen.Show()
 		

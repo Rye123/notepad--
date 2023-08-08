@@ -11,6 +11,7 @@ type TextBuffer interface {
 	Delete(index int) rune // Deletes and returns the character at `index`.
 	Clear() // Clears the buffer.
 	Length() int // Returns the size of the buffer
+	GetIndex() int // Returns the current index
 	MoveIndex(newIndex int) // Moves index to a new index
 }
 
@@ -73,6 +74,10 @@ func (buf *buffer) Length() int {
 	return len(buf.arr)
 }
 
+func (buf *buffer) GetIndex() int {
+	return 0
+}
+
 func (buf *buffer) MoveIndex(newIndex int) {
 	return
 }
@@ -92,6 +97,10 @@ func NewGapBuffer() *GapBuffer {
 		make([]rune, 0),
 		0,
 	}
+}
+
+func (buf *GapBuffer) GetIndex() int {
+	return buf.cursorIndex
 }
 
 // Moves index to `newIndex`. If `newIndex` is beyond the bounds of the buffer, it stays at the closest bound.
