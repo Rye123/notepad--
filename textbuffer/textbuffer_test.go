@@ -21,18 +21,27 @@ func TestTextBufferInsertion(t *testing.T) {
 
 	// Test insertion with empty buffer
 	buf.Insert(0, 'H')
+	if buf.Length() != 1 {
+		t.Fatalf("Test failed, expected length 1, buf.Length(): " + fmt.Sprintf("%d", buf.Length()))
+	}
 	if buf.String() != "H" {
 		t.Fatalf("Expected \"H\", instead buf.String(): " + buf.String())
 	}
 
 	// Test insertion at the start
 	buf.Insert(0, 'A')
+	if buf.Length() != 2 {
+		t.Fatalf("Test failed, expected length 2, buf.Length(): " + fmt.Sprintf("%d", buf.Length()))
+	}
 	if buf.String() != "AH" {
 		t.Fatalf("Expected \"AH\", instead buf.String(): " + buf.String())
 	}
 
 	// Test insertion in the middle
 	buf.Insert(1, 'E')
+	if buf.Length() != 3 {
+		t.Fatalf("Test failed, expected length 1, buf.Length(): " + fmt.Sprintf("%d", buf.Length()))
+	}
 	if buf.String() != "AEH" {
 		t.Fatalf("Expected \"AEH\", instead buf.String(): " + buf.String())
 	}
@@ -73,6 +82,10 @@ func TestTextBufferDelete(t *testing.T) {
 	buf.Insert(buf.Length(), 'e')
 	buf.Insert(buf.Length(), 'r')
 	buf.Insert(buf.Length(), 'e')
+	
+	if buf.Length() != 11 {
+		t.Fatalf("Test failed, expected length 11, buf.Length(): " + fmt.Sprintf("%d", buf.Length()))
+	}
 
 	// Test: Delete first
 	ch := buf.Delete(0)
@@ -81,6 +94,9 @@ func TestTextBufferDelete(t *testing.T) {
 	}
 	if buf.String() != "ello There" {
 		t.Fatalf("Expected \"ello There\", instead buf.String(): " + buf.String())
+	}
+	if buf.Length() != 10 {
+		t.Fatalf("Test failed, expected length 10, buf.Length(): " + fmt.Sprintf("%d", buf.Length()))
 	}
 
 	// Test: Delete Middle Values
