@@ -4,14 +4,14 @@ import (
 	"errors"
 )
 
-type Textbuffer interface {
+type TextBuffer interface {
 	String() string // Returns contents of the textbuffer as a string
 	Insert(index int, ch rune) error // Inserts `ch` into the string at `index`. Error raised if index is not in the range [0, Textbuffer.Length()] (inclusive)
 	Append(s string) error // Appends a string `s` into the end of the buffer.
 	Delete(index int) rune // Deletes and returns the character at `index`.
 	Clear() // Clears the buffer.
 	Length() int // Returns the size of the buffer
-	MoveCursor(newIndex int) // Moves cursor to a new index
+	MoveIndex(newIndex int) // Moves index to a new index
 }
 
 // Simple buffer for testing Textbuffer functions
@@ -73,7 +73,7 @@ func (buf *buffer) Length() int {
 	return len(buf.arr)
 }
 
-func (buf *buffer) MoveCursor(newIndex int) {
+func (buf *buffer) MoveIndex(newIndex int) {
 	return
 }
 
@@ -94,8 +94,8 @@ func NewGapBuffer() *GapBuffer {
 	}
 }
 
-// Moves cursor to `newIndex`. If `newIndex` is beyond the bounds of the buffer, it stays at the closest bound.
-func (buf *GapBuffer) MoveCursor(newIndex int) {
+// Moves index to `newIndex`. If `newIndex` is beyond the bounds of the buffer, it stays at the closest bound.
+func (buf *GapBuffer) MoveIndex(newIndex int) {
 	if newIndex < 0 {
 		newIndex = 0
 	} else if newIndex > buf.Length() {
@@ -134,10 +134,10 @@ func (buf *GapBuffer) Insert(index int, ch rune) error {
 	}
 	
 	if index != buf.cursorIndex {
-		buf.MoveCursor(index)
+		buf.MoveIndex(index)
 	}
 
-	// invariant after MoveCursor: insertion always appends to left stack
+	// invariant after MoveIndex: insertion always appends to left stack
 	buf.left = append(buf.left, ch)
 	buf.cursorIndex++
 
@@ -156,10 +156,10 @@ func (buf *GapBuffer) Append(s string) error {
 
 func (buf *GapBuffer) Delete(index int) rune {
 	if index != buf.cursorIndex {
-		buf.MoveCursor(index)
+		buf.MoveIndex(index)
 	}
 
-	// invariant after MoveCursor: deletion always deletes from right stack
+	// invariant after MoveIndex: deletion always deletes from right stack
 	if len(buf.right) == 0 {
 		return rune(0) // \0 character
 	}
