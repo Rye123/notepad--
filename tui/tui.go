@@ -2,6 +2,8 @@ package tui
 
 import (
 	"fmt"
+	"strings"
+	"github.com/Rye123/notepad--/util"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -41,9 +43,75 @@ func drawMenuButton(screen tcell.Screen, x1, width, y int, style tcell.Style, te
 	drawText(screen, x1+hotkeyIndex, y, x1+hotkeyIndex, y, style.Underline(true), string(text[hotkeyIndex]))
 }
 
+// Draw Text Box
+func DrawTextBox(screen tcell.Screen, cursor_x, cursor_y int, options util.Options, text string) {
+	scr_w, scr_h := screen.Size()
+	scr_w--
+	scr_h--
+	textboxStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
+
+	startRow := 4
+	endRow := scr_h - 2
+
+	rows := make([]string, endRow-startRow+1)
+
+	if options.WordWrap {
+		// convert text into a series of lines short enough to fit within scr_w
+		curLine := 0
+		for _, str := range(strings.Split(text, "\n")) {
+			if (startRow + curLine) > endRow {
+				break
+			}
+
+			// Split string
+			if len(str) <= scr_w {
+				rows[curLine] = str
+			} else {
+				fullString := str
+				for len(fullString) > scr_w {
+					if (startRow + curLine) >= endRow {
+						break
+					}
+					rows[curLine] = fullString[:scr_w]
+					curLine++
+					fullString = fullString[scr_w:]
+				}
+				// Add the final line
+				if len(fullString) <= scr_w {
+					rows[curLine] = fullString
+				} else {
+					rows[curLine] = fullString[:scr_w]
+				}
+			}
+			curLine++
+		}
+	} else {
+		// convert text into a series of truncated lines
+		for i, str := range(strings.Split(text, "\n")) {
+			if (startRow + i) > endRow {
+				break
+			}
+			
+			// Truncate string
+			if len(str) <= scr_w {
+				rows[i] = str
+			} else {
+				rows[i] = str[:scr_w]
+			}
+		}
+	}
+
+	for i, str := range(rows) {
+		if startRow + i > endRow {
+			break
+		}
+		drawText(screen, 0, startRow + i, scr_w, startRow + i, textboxStyle, str)
+	}
+}
+
 // Draw the Status Bar
 // (Cursor Position)           | 100% | (Line End Mode) | (Encoding)
-func DrawStatusBar(screen tcell.Screen, cursor_x, cursor_y int, line_end_mode string, encoding string) {
+func DrawStatusBar(screen tcell.Screen, cursor_x, cursor_y int, options util.Options) {
 	scr_w, scr_h := screen.Size()
 	barStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
 	scr_w--
@@ -56,16 +124,8 @@ func DrawStatusBar(screen tcell.Screen, cursor_x, cursor_y int, line_end_mode st
 	drawText(screen, 0, scr_h, len(cursorText), scr_h, barStyle, cursorText)
 	
 	//// Other Data
-	line_end_mode_text := ""
-	switch line_end_mode {
-	case "LF":
-		line_end_mode_text = "Unix (LF)"
-	case "CRLF":
-		line_end_mode_text = "Windows (CRLF)"
-	default:
-		line_end_mode_text = "Windows (CRLF)"
-	}
-	otherText := fmt.Sprintf("| 100%% | %v   | %v   ", line_end_mode_text, encoding)
+	line_end_mode_text := options.LineEndModeString()
+	otherText := fmt.Sprintf("| 100%% | %v   | %v   ", line_end_mode_text, options.Encoding)
 	drawText(screen, scr_w - len(otherText), scr_h, scr_w, scr_h, barStyle, otherText)
 }
 
