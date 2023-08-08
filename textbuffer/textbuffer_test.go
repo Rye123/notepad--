@@ -6,7 +6,7 @@ import (
 )
 
 func TestTextBufferInsertion(t *testing.T) {
-	buf := newBuffer()
+	buf := NewGapBuffer()
 
 	// Test length
 	if buf.Length() != 0 {
@@ -69,7 +69,7 @@ func TestTextBufferInsertion(t *testing.T) {
 }
 
 func TestTextBufferDelete(t *testing.T) {
-	buf := newBuffer()
+	buf := NewGapBuffer()
 
 	buf.Insert(buf.Length(), 'H')
 	buf.Insert(buf.Length(), 'e')
@@ -141,7 +141,7 @@ func TestTextBufferDelete(t *testing.T) {
 }
 
 func TestTextBufferAppend(t *testing.T) {
-	buf := newBuffer()
+	buf := NewGapBuffer()
 	str1 := "Hello World"
 	buf.Append(str1)
 	if buf.String() != str1 {
@@ -156,7 +156,7 @@ func TestTextBufferAppend(t *testing.T) {
 }
 
 func TestTextBufferClear(t *testing.T) {
-	buf := newBuffer()
+	buf := NewGapBuffer()
 	str := "Hello world"
 	buf.Append(str)
 	if buf.Length() != len(str) {
