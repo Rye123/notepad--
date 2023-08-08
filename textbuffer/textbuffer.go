@@ -7,7 +7,9 @@ import (
 type Textbuffer interface {
 	String() string // Returns contents of the textbuffer as a string
 	Insert(index int, ch rune) error // Inserts `ch` into the string at `index`. Error raised if index is not in the range [0, Textbuffer.Length()] (inclusive)
+	Append(s string) error // Appends a string `s` into the end of the buffer.
 	Delete(index int) rune // Deletes and returns the character at `index`.
+	Clear() // Clears the buffer.
 	Length() int // Returns the size of the buffer
 }
 
@@ -41,6 +43,16 @@ func (buf *buffer) Insert(index int, ch rune) error {
 	return nil
 }
 
+func (buf *buffer) Append(s string) error {
+	for _, c := range(s) {
+		err := buf.Insert(buf.Length(), c)
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (buf *buffer) Delete(index int) rune {
 	ch := buf.arr[index]
 	for i := index; i < len(buf.arr) - 1; i++ {
@@ -49,6 +61,10 @@ func (buf *buffer) Delete(index int) rune {
 	buf.arr = buf.arr[:len(buf.arr) - 1]
 
 	return ch
+}
+
+func (buf *buffer) Clear() {
+	buf.arr = make([]rune, 0)
 }
 
 func (buf *buffer) Length() int {

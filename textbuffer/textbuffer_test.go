@@ -123,3 +123,32 @@ func TestTextBufferDelete(t *testing.T) {
 		t.Fatalf("Expected length 0, instead buf.Length(): " + fmt.Sprintf("%d", buf.Length()))
 	}
 }
+
+func TestTextBufferAppend(t *testing.T) {
+	buf := newBuffer()
+	str1 := "Hello World"
+	buf.Append(str1)
+	if buf.String() != str1 {
+		t.Fatalf("Expected \"" + str1 + "\", instead buf.String(): " + buf.String())
+	}
+
+	str2 := " this is working."
+	buf.Append(str2)
+	if buf.String() != (str1 + str2) {
+		t.Fatalf("Expected \"" + (str1 + str2) + "\", instead buf.String(): " + buf.String())
+	}
+}
+
+func TestTextBufferClear(t *testing.T) {
+	buf := newBuffer()
+	str := "Hello world"
+	buf.Append(str)
+	if buf.Length() != len(str) {
+		t.Fatalf(fmt.Sprintf("Expected %d, instead buf.Length()=%d", len(str), buf.Length()))
+	}
+	buf.Clear()
+	if buf.Length() != 0 {
+		t.Fatalf(fmt.Sprintf("Expected 0, instead buf.Length()=%d", buf.Length()))
+	}
+	
+}
