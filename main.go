@@ -79,6 +79,10 @@ func main() {
 		
 	// Event Loop
 	quit := func() {
+		// Save Dialog
+		if appstate.FileModified {
+			//TODO: Add dialog
+		}
 		// Catch panics
 		maybePanic := recover()
 		screen.SetCursorStyle(tcell.CursorStyleDefault)
@@ -114,14 +118,33 @@ renderLoop:
 			screen.Sync()
 		case *tcell.EventKey:
 			// Note: SHIFT doesn't appear to work.
-			_, key, _ := eventType.Modifiers(), eventType.Key(), eventType.Rune()
+			mod, key, ch := eventType.Modifiers(), eventType.Key(), eventType.Rune()
 
 			// Arrow Keys: Get active element and movecursorindex there
 			if key == tcell.KeyLeft {
 				activeElem.SetCursorIndex(activeElem.GetCursorIndex() - 1)
-			}
-			if key == tcell.KeyRight {
+				break
+			} else if key == tcell.KeyRight {
 				activeElem.SetCursorIndex(activeElem.GetCursorIndex() + 1)
+				break
+			}
+
+			// Ctrl-S: Save
+			if key == tcell.KeyCtrlS {
+				if !appstate.FileModified {
+					break
+				}
+				err := os.WriteFile(
+					appstate.Filename,
+					[]byte(textbox.Content()),
+					0660, // user/group rw
+				)
+				if err != nil {
+					//TODO: save backup before crash
+					panic("Could not save file.")
+				}
+				appstate.FileModified = false
+				break
 			}
 			
 			// Ctrl-W: Exit (if no more tabs left)
@@ -132,6 +155,28 @@ renderLoop:
 			// (Debug: ESC to Exit)
 			if key == tcell.KeyEscape {
 				break renderLoop
+			}
+
+			// If no modifiers are pressed, it's normal input
+			if (mod&tcell.ModCtrl == 0) && (mod&tcell.ModAlt == 0) && (mod&tcell.ModMeta == 0) {
+				if textbox.IsActive() {
+					if key == tcell.KeyBackspace || key == tcell.KeyBackspace2 {
+						textbox.Backspace()
+					} else if key == tcell.KeyDelete {
+						textbox.Delete()
+					} else if key == tcell.KeyEnter {
+						textbox.Insert('\n')
+						
+					} else if key == tcell.KeyTab {
+						textbox.Insert('\t')
+					} else {
+						textbox.Insert(ch)
+					}
+
+					if !appstate.FileModified {
+						appstate.FileModified = true
+					}
+				}
 			}
 		}
 

@@ -200,6 +200,10 @@ func (elem *Textbox) GetLeft() int {
 	return elem.leftIndex
 }
 
+func (elem *Textbox) Content() string {
+	return elem.buf.String()
+}
+
 func NewTextbox(row int, initialText string, appstate *util.AppState) *Textbox {
 	buf := textbuffer.NewGapBuffer()
 	if len(initialText) > 0 {
@@ -354,6 +358,20 @@ func (elem *Textbox) Draw() {
 	if elem.active {
 		appstate.Screen.ShowCursor(cursor_x, cursor_y)
 	}
+}
+
+func (elem *Textbox) Insert(key rune) {
+	elem.buf.Insert(elem.cursorIndex, key)
+	elem.SetCursorIndex(elem.cursorIndex+1)
+}
+
+func (elem *Textbox) Backspace() {
+	elem.buf.Delete(elem.cursorIndex-1)
+	elem.SetCursorIndex(elem.cursorIndex-1)
+}
+
+func (elem *Textbox) Delete() {
+	elem.buf.Delete(elem.cursorIndex)
 }
 
 func (elem *Textbox) IsActive() bool {
