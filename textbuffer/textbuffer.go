@@ -6,6 +6,8 @@ import (
 
 type TextBuffer interface {
 	String() string // Returns contents of the textbuffer as a string
+	StringBeforeIndex() string // Returns contents of the textbuffer before `index`
+	StringAfterInclIndex() string // Returns contents of the textbuffer after and including `index`
 	Insert(index int, ch rune) error // Inserts `ch` into the string at `index`. Error raised if index is not in the range [0, Textbuffer.Length()] (inclusive)
 	Append(s string) error // Appends a string `s` into the end of the buffer.
 	Delete(index int) rune // Deletes and returns the character at `index`.
@@ -13,73 +15,6 @@ type TextBuffer interface {
 	Length() int // Returns the size of the buffer
 	GetIndex() int // Returns the current index
 	MoveIndex(newIndex int) // Moves index to a new index
-}
-
-// Simple buffer for testing Textbuffer functions
-type buffer struct {
-	arr []rune
-}
-
-func newBuffer() *buffer {
-	return &buffer{make([]rune, 0)}
-}
-
-func (buf *buffer) String() string {
-	return string(buf.arr)
-}
-
-func (buf *buffer) Insert(index int, ch rune) error {
-	if index < 0 || index > len(buf.arr) {
-		return errors.New("Index error")
-	}
-	
-	// Case: Insertion at end
-	if index == len(buf.arr) {
-		buf.arr = append(buf.arr, ch)
-		return nil
-	}
-
-	// Case: Insertion at beginning or middle
-	buf.arr = append(buf.arr, buf.arr[len(buf.arr)-1])
-	copy(buf.arr[index+1:], buf.arr[index:])
-	buf.arr[index] = ch
-	return nil
-}
-
-func (buf *buffer) Append(s string) error {
-	for _, c := range(s) {
-		err := buf.Insert(buf.Length(), c)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (buf *buffer) Delete(index int) rune {
-	ch := buf.arr[index]
-	for i := index; i < len(buf.arr) - 1; i++ {
-		buf.arr[i] = buf.arr[i+1]
-	}
-	buf.arr = buf.arr[:len(buf.arr) - 1]
-
-	return ch
-}
-
-func (buf *buffer) Clear() {
-	buf.arr = make([]rune, 0)
-}
-
-func (buf *buffer) Length() int {
-	return len(buf.arr)
-}
-
-func (buf *buffer) GetIndex() int {
-	return 0
-}
-
-func (buf *buffer) MoveIndex(newIndex int) {
-	return
 }
 
 // A dynamic array with efficient insertion at a particular index
@@ -127,7 +62,7 @@ func (buf *GapBuffer) MoveIndex(newIndex int) {
 	}
 }
 
-func (buf *GapBuffer) String() string{
+func (buf *GapBuffer) String() string {
 	fullBuffer := make([]rune, buf.Length())
 	copy(fullBuffer, buf.left)
 	for i, ch := range(buf.right) {
@@ -135,6 +70,19 @@ func (buf *GapBuffer) String() string{
 		fullBuffer[fullBufferIndex] = ch
 	}
 	return string(fullBuffer)
+}
+
+func (buf *GapBuffer) StringBeforeIndex() string {
+	return string(buf.left)
+}
+
+func (buf *GapBuffer) StringAfterInclIndex() string {
+	buffer := make([]rune, len(buf.right))
+	for i, ch := range(buf.right) {
+		bufferIndex := len(buffer) - 1 - i
+		buffer[bufferIndex] = ch
+	}
+	return string(buffer)
 }
 
 func (buf *GapBuffer) Insert(index int, ch rune) error {

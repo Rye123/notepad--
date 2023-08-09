@@ -1,16 +1,16 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"os"
 	"errors"
 	"github.com/Rye123/notepad--/tui"
 	"github.com/Rye123/notepad--/util"
-	"github.com/Rye123/notepad--/textbuffer"
 	"github.com/gdamore/tcell/v2"
 )
 
-const AppName = "Notepad--"
+const APP_NAME = "Notepad--"
 
 func main() {
 	// Get command line arguments
@@ -18,13 +18,7 @@ func main() {
 	
 	// Initialise variables
 	filename := "Untitled"
-	options := util.Options{
-		LineEndMode: "CRLF",
-		Encoding: "UTF-8",
-		WordWrap: true,
-	}
-	textbuf := textbuffer.NewGapBuffer()
-	fileModified := false
+	initialText := ""
 	if len(commandArgs) > 1 {
 		filename = commandArgs[1]
 		// Read file if given
@@ -37,7 +31,7 @@ func main() {
 			//TODO: add prompt to create file if doesn't exist
 		} else {
 			// Load data into buffer
-			textbuf.Append(string(data))
+			initialText = string(data)
 		}
 	}
 	
@@ -56,8 +50,32 @@ func main() {
 	screen.SetStyle(defaultStyle)
 	screen.SetCursorStyle(tcell.CursorStyleDefault)
 
+	appstate := util.AppState{
+		AppName: APP_NAME,
+		Filename: filename,
+		FileModified: false,
+		Screen: screen,
+		BarStyle: defaultStyle,
+		TextboxStyle: defaultStyle,
+		ButtonStyle: defaultStyle,
+		ButtonActiveStyle: defaultStyle,
+		Options: util.Options{
+			LineEndMode: "CRLF",
+			Encoding: "UTF-8",
+			WordWrap: true,
+		},
+	}
+
 	// Setup Screen
 	screen.Clear()
+	textbox := tui.NewTextbox(4, initialText, &appstate)
+	elements := []tui.TUIElem{
+		tui.NewTitleBar(0, 1, &appstate),
+		tui.NewMenuBar(2, 3, &appstate),
+		textbox,
+		tui.NewStatusBar(textbox, &appstate),
+	}
+	activeElem := elements[0]
 		
 	// Event Loop
 	quit := func() {
@@ -67,7 +85,9 @@ func main() {
 		screen.Fini()
 
 		if maybePanic != nil {
-			panic(maybePanic)
+			cursor_x, cursor_y := textbox.GetCursorXY()
+			scr_w, scr_h := screen.Size()
+			panic(fmt.Sprintf("%+v\nCurrent Screen Size: (%d, %d)\nCursor Data: (%d, %d), %d. Left: %d", maybePanic, scr_w, scr_h, cursor_x, cursor_y, textbox.GetCursorIndex(), textbox.GetLeft()))
 		}
 		os.Exit(0)
 	}
@@ -79,6 +99,14 @@ renderLoop:
 	for {
 		screen.Show()
 
+		// Identify active element
+		for _, elem := range(elements) {
+			if elem.IsActive() {
+				activeElem = elem
+				break
+			}
+		}
+
 		// Process Events
 		event := screen.PollEvent()
 		switch eventType := event.(type) {
@@ -88,12 +116,12 @@ renderLoop:
 			// Note: SHIFT doesn't appear to work.
 			_, key, _ := eventType.Modifiers(), eventType.Key(), eventType.Rune()
 
-			// Arrow Keys
+			// Arrow Keys: Get active element and movecursorindex there
 			if key == tcell.KeyLeft {
-				textbuf.MoveIndex(textbuf.GetIndex() - 1)
+				activeElem.SetCursorIndex(activeElem.GetCursorIndex() - 1)
 			}
 			if key == tcell.KeyRight {
-				textbuf.MoveIndex(textbuf.GetIndex() + 1)
+				activeElem.SetCursorIndex(activeElem.GetCursorIndex() + 1)
 			}
 			
 			// Ctrl-W: Exit (if no more tabs left)
@@ -111,10 +139,9 @@ renderLoop:
 		screen.Clear()
 		
 		//// TUI
-		tui.DrawTitleBar(screen, AppName, filename, fileModified)
-		tui.DrawMenuBar(screen)
-
-		tui.DrawTextBox(screen, textbuf.GetIndex(), options, textbuf.String())
+		for _, elem := range(elements) {
+			elem.Draw()
+		}
 		
 		screen.Show()
 		
