@@ -152,12 +152,10 @@ func (button *menuButton) drawAtRow(appstate *util.AppState, row int) {
 
 func (elem *MenuBar) Focus() {
 	elem.active = true
-	elem.cursorIndex = 0
 }
 
 func (elem *MenuBar) Unfocus() {
 	elem.active = false
-	elem.cursorIndex = -1
 }
 
 func (elem *MenuBar) GetCursorIndex() int {

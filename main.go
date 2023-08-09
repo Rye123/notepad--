@@ -58,7 +58,7 @@ func main() {
 		BarStyle: defaultStyle,
 		TextboxStyle: defaultStyle,
 		ButtonStyle: defaultStyle,
-		ButtonActiveStyle: defaultStyle,
+		ButtonActiveStyle: defaultStyle.Reverse(true),
 		Options: util.Options{
 			LineEndMode: "CRLF",
 			Encoding: "UTF-8",
@@ -68,16 +68,32 @@ func main() {
 
 	// Setup Screen
 	screen.Clear()
+	menubar := tui.NewMenuBar(2, 3, &appstate)
 	textbox := tui.NewTextbox(4, initialText, &appstate)
 	elements := []tui.TUIElem{
 		tui.NewTitleBar(0, 1, &appstate),
-		tui.NewMenuBar(2, 3, &appstate),
+		menubar,
 		textbox,
 		tui.NewStatusBar(textbox, &appstate),
 	}
 	activeElem := elements[0]
 		
 	// Event Loop
+	save := func() {
+		if !appstate.FileModified {
+			return
+		}
+		err := os.WriteFile(
+			appstate.Filename,
+			[]byte(textbox.Content()),
+			0660, // RW for user and group
+		)
+		if err != nil {
+			// TODO: Save backup before crash
+			panic("Error Saving File.")
+		}
+		appstate.FileModified = false
+	}
 	quit := func() {
 		// Save Dialog
 		if appstate.FileModified {
@@ -120,6 +136,14 @@ renderLoop:
 			// Note: SHIFT doesn't appear to work.
 			mod, key, ch := eventType.Modifiers(), eventType.Key(), eventType.Rune()
 
+			if mod & tcell.ModAlt != 0 {
+				menubar.Focus()
+				textbox.Unfocus()
+			} else {
+				menubar.Unfocus()
+				textbox.Focus()
+			}
+
 			// Arrow Keys: Get active element and movecursorindex there
 			if key == tcell.KeyLeft {
 				activeElem.SetCursorIndex(activeElem.GetCursorIndex() - 1)
@@ -131,19 +155,7 @@ renderLoop:
 
 			// Ctrl-S: Save
 			if key == tcell.KeyCtrlS {
-				if !appstate.FileModified {
-					break
-				}
-				err := os.WriteFile(
-					appstate.Filename,
-					[]byte(textbox.Content()),
-					0660, // user/group rw
-				)
-				if err != nil {
-					//TODO: save backup before crash
-					panic("Could not save file.")
-				}
-				appstate.FileModified = false
+				save()
 				break
 			}
 			
@@ -176,6 +188,8 @@ renderLoop:
 					if !appstate.FileModified {
 						appstate.FileModified = true
 					}
+				} else if menubar.IsActive() {
+					//TODO: Add dropdown for menu
 				}
 			}
 		}
