@@ -24,10 +24,11 @@ type TitleBar struct {
 	hidden bool
 	row1, row2 int // Rows occupied by the titlebar
 	appstate *util.AppState
+	textbox *Textbox // if filename is empty
 }
 
-func NewTitleBar(row1, row2 int, appstate *util.AppState) *TitleBar {
-	return &TitleBar{false, row1, row2, appstate}
+func NewTitleBar(row1, row2 int, appstate *util.AppState, textbox *Textbox) *TitleBar {
+	return &TitleBar{false, row1, row2, appstate, textbox}
 }
 
 func (elem *TitleBar) Draw() {
@@ -41,6 +42,14 @@ func (elem *TitleBar) Draw() {
 	scr_w--; scr_h--
 
 	filename := appstate.Filename
+	if filename == "" {
+		title := util.GetTemporaryTitle(elem.textbox.Content())
+		if len(title) == 0 {
+			filename = "Untitled"
+		} else {
+			filename = title
+		}
+	}
 	if appstate.FileModified {
 		filename = "*" + filename
 	}

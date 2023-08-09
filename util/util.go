@@ -2,6 +2,7 @@
 package util
 
 import (
+	"strings"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -45,4 +46,11 @@ type AppState struct {
 	ButtonStyle tcell.Style
 	ButtonActiveStyle tcell.Style
 	Options Options
+}
+
+// Used to generate a temporary title if no file was used
+func GetTemporaryTitle(content string) string {
+	title, _, _ := strings.Cut(content, "\n")
+	title = strings.TrimSpace(title)
+	return title
 }

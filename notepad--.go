@@ -17,7 +17,7 @@ func main() {
 	commandArgs := os.Args
 	
 	// Initialise variables
-	filename := "Untitled"
+	filename := ""
 	initialText := ""
 	if len(commandArgs) > 1 {
 		filename = commandArgs[1]
@@ -71,7 +71,7 @@ func main() {
 	menubar := tui.NewMenuBar(2, 3, &appstate)
 	textbox := tui.NewTextbox(4, initialText, &appstate)
 	elements := []tui.TUIElem{
-		tui.NewTitleBar(0, 1, &appstate),
+		tui.NewTitleBar(0, 1, &appstate, textbox),
 		menubar,
 		textbox,
 		tui.NewStatusBar(textbox, &appstate),
@@ -80,9 +80,21 @@ func main() {
 		
 	// Event Loop
 	save := func() {
+		// TODO: Add a separate prompt function to handle both the later prompt and the quit prompt
 		if !appstate.FileModified {
 			return
 		}
+		content := textbox.Content()
+
+		if appstate.Filename == "" {
+			if len(content) == 0 {
+				return
+			}
+			panic("not implemented")
+			//filename := util.GetTemporaryTitle(textbox.Content())
+			// TODO: Prompt to save (i.e. create) new file based on the temp title
+		}
+		
 		err := os.WriteFile(
 			appstate.Filename,
 			[]byte(textbox.Content()),
@@ -188,6 +200,7 @@ renderLoop:
 					if !appstate.FileModified {
 						appstate.FileModified = true
 					}
+
 				} else if menubar.IsActive() {
 					//TODO: Add dropdown for menu
 				}
