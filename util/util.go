@@ -52,5 +52,8 @@ type AppState struct {
 func GetTemporaryTitle(content string) string {
 	title, _, _ := strings.Cut(content, "\n")
 	title = strings.TrimSpace(title)
+	if len(title) > 45 {
+		title = title[:45]
+	}
 	return title
 }

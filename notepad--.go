@@ -92,7 +92,7 @@ func main() {
 			}
 			panic("not implemented")
 			//filename := util.GetTemporaryTitle(textbox.Content())
-			// TODO: Prompt to save (i.e. create) new file based on the temp title
+			// TODO: Prompt to save (i.e. create) new file based on the temp title, and add ".txt"
 		}
 		
 		err := os.WriteFile(
