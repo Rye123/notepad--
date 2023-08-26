@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"errors"
 	"github.com/Rye123/notepad--/tui"
 	"github.com/Rye123/notepad--/util"
 	"github.com/gdamore/tcell/v2"
@@ -18,21 +17,8 @@ func main() {
 	
 	// Initialise variables
 	filename := ""
-	initialText := ""
 	if len(commandArgs) > 1 {
 		filename = commandArgs[1]
-		// Read file if given
-		data, err := os.ReadFile(filename)
-		if err != nil {
-			// Ignore error if file doesn't exist yet
-			if !errors.Is(err, os.ErrNotExist) {
-				log.Fatalf("%+v", err)
-			}
-			//TODO: add prompt to create file if doesn't exist
-		} else {
-			// Load data into buffer
-			initialText = string(data)
-		}
 	}
 	
 	// Initialise screen
@@ -43,38 +29,27 @@ func main() {
 	if err := screen.Init(); err != nil {
 		log.Fatalf("%+v", err)
 	}
-	
 
-	// Set Default Text Style
-	defaultStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
-	screen.SetStyle(defaultStyle)
-	screen.SetCursorStyle(tcell.CursorStyleDefault)
-
-	appstate := util.AppState{
-		AppName: APP_NAME,
-		Filename: filename,
-		FileModified: false,
-		Screen: screen,
-		BarStyle: defaultStyle,
-		TextboxStyle: defaultStyle,
-		ButtonStyle: defaultStyle,
-		ButtonActiveStyle: defaultStyle.Reverse(true),
-		Options: util.Options{
-			LineEndMode: "CRLF",
-			Encoding: "UTF-8",
-			WordWrap: true,
-		},
+	// Initialise app state
+	options := util.Options{
+		LineEndMode: "CRLF",
+		Encoding: "UTF-8",
+		WordWrap: true,
 	}
+	appstate := util.InitialiseAppState(screen, filename, options)
 
 	// Setup Screen
 	screen.Clear()
-	menubar := tui.NewMenuBar(2, 3, &appstate)
-	textbox := tui.NewTextbox(4, initialText, &appstate)
+	titlebar := tui.NewTitleBar(appstate)
+	menubar := tui.NewMenuBar(appstate)
+	textbox := tui.NewTextbox(appstate)
+	statusbar := tui.NewStatusBar(appstate, textbox)
+
 	elements := []tui.TUIElem{
-		tui.NewTitleBar(0, 1, &appstate, textbox),
+		titlebar,
 		menubar,
 		textbox,
-		tui.NewStatusBar(textbox, &appstate),
+		statusbar,
 	}
 	activeElem := elements[0]
 		

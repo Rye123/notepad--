@@ -2,9 +2,15 @@
 package util
 
 import (
+	"os"
 	"strings"
+	"log"
+	"errors"
 	"github.com/gdamore/tcell/v2"
+	"github.com/Rye123/notepad--/textbuffer"
 )
+
+const APP_NAME = "Notepad--"
 
 // Options for Notepad--
 type Options struct {
@@ -41,11 +47,52 @@ type AppState struct {
 	Filename string
 	FileModified bool
 	Screen tcell.Screen
+	TextBuffer textbuffer.TextBuffer
 	BarStyle tcell.Style
 	TextboxStyle tcell.Style
 	ButtonStyle tcell.Style
 	ButtonActiveStyle tcell.Style
 	Options Options
+}
+
+func InitialiseAppState(screen tcell.Screen, filename string, options Options) *AppState {
+	defaultStyle := tcell.StyleDefault.Background(tcell.ColorReset).Foreground(tcell.ColorReset)
+	screen.SetStyle(defaultStyle)
+	screen.SetCursorStyle(tcell.CursorStyleDefault)
+
+	textbuffer := textbuffer.NewGapBuffer()
+
+	// Read file, if given
+	if len(filename) > 0 {
+		data, err := os.ReadFile(filename)
+		if err != nil {
+			// Report if it's an error unrelated to the file not existing
+			if !errors.Is(err, os.ErrNotExist) {
+				log.Fatalf("%+v", err)
+			}
+		} else {
+			initialText := string(data)
+			// Load into buffer
+			if len(initialText) > 0 {
+				textbuffer.Append(initialText)
+			}
+		}
+	}
+
+	appstate := AppState{
+		AppName: APP_NAME,
+		Filename: filename,
+		FileModified: false,
+		Screen: screen,
+		TextBuffer: textbuffer,
+		BarStyle: defaultStyle,
+		TextboxStyle: defaultStyle,
+		ButtonStyle: defaultStyle,
+		ButtonActiveStyle: defaultStyle.Reverse(true),
+		Options: options,
+	}
+
+	return &appstate
 }
 
 // Used to generate a temporary title if no file was used
