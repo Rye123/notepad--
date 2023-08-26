@@ -17,24 +17,6 @@ type TUIElem interface {
 	Show() // Shows the element
 }
 
-type Instance struct {
-	TitleBar *TitleBar
-	MenuBar *MenuBar
-	Textbox *Textbox
-	StatusBar *StatusBar
-}
-
-func NewInstance(appstate *util.AppState) *Instance {
-	titlebar := NewTitleBar(appstate)
-	menubar := NewMenuBar(appstate)
-	textbox := NewTextbox(appstate)
-	statusbar := NewStatusBar(appstate, textbox)
-	
-	return &Instance{
-		titlebar, menubar, textbox, statusbar,
-	}
-}
-
 /* HELPER FUNCTIONS */
 
 // Draw Text
