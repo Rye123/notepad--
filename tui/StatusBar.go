@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"strings"
 	"github.com/gdamore/tcell/v2"
 	"github.com/Rye123/notepad--/util"
 )
@@ -11,15 +12,21 @@ import (
 type StatusBar struct {
 	hidden bool
 	textbox *Textbox
+	drawn bool
 	appstate *util.AppState
 }
 
 func NewStatusBar(appstate *util.AppState, textbox *Textbox) *StatusBar {
-	return &StatusBar{false, textbox, appstate}
+	return &StatusBar{false, textbox, false, appstate}
 }
 
 func (elem *StatusBar) Draw() {
 	if elem.hidden {
+		return
+	}
+
+	// Don't update if textbox is not active and if this is already drawn
+	if !elem.textbox.active && elem.drawn {
 		return
 	}
 
@@ -33,10 +40,19 @@ func (elem *StatusBar) Draw() {
 	cursorX, cursorY := elem.textbox.GetCursorXY()
 	//TODO: Remove debugging cursorIndex
 	cursorText := fmt.Sprintf("Ln %d, Col %d (%d)", cursorY+1, cursorX+1, elem.textbox.cursorIndex)
-	drawText(appstate.Screen, 0, scr_h, len(cursorText), scr_h, appstate.BarStyle, cursorText)
-
 	otherText := fmt.Sprintf("| 100%% | %v | %v ", appstate.Options.LineEndModeString(), appstate.Options.Encoding)
-	drawText(appstate.Screen, scr_w - len(otherText), scr_h, scr_w, scr_h, appstate.BarStyle, otherText)
+
+	// Generate full string
+	spaceBetween := scr_w - len(otherText) - len(cursorText)
+	fullText := cursorText
+	// if not enough space between, we only show the cursor text
+	if spaceBetween > 0 {
+		// otherwise, we can show both
+		fullText = cursorText + strings.Repeat(" ", spaceBetween) + otherText
+	}
+	drawText(appstate.Screen, 0, scr_h, scr_w, scr_h, appstate.BarStyle, fullText)
+
+	elem.drawn = true
 }
 
 func (elem *StatusBar) IsActive() bool {
@@ -65,6 +81,7 @@ func (elem *StatusBar) IsHidden() bool {
 
 func (elem *StatusBar) Hide() {
 	elem.hidden = true
+	elem.drawn = false
 }
 
 func (elem *StatusBar) Show() {

@@ -50,9 +50,9 @@ func main() {
 
 	// Setup Screen
 	screen.Clear()
-	titlebar := tui.NewTitleBar(appstate)
-	menubar := tui.NewMenuBar(appstate)
 	textbox := tui.NewTextbox(appstate)
+	titlebar := tui.NewTitleBar(appstate, textbox)
+	menubar := tui.NewMenuBar(appstate)
 	statusbar := tui.NewStatusBar(appstate, textbox)
 
 	elems := []tui.TUIElem{

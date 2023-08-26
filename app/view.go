@@ -35,9 +35,7 @@ renderLoop:
 			}
 		}
 
-		// Draw Screen
-		screen.Clear()
-
+		// Draw Screen (Selectively update the elements)
 		for _, elem := range(ui.elements) {
 			elem.Draw()
 		}

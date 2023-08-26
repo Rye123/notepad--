@@ -16,15 +16,21 @@ type MenuBar struct {
 	hidden bool
 	active bool
 	cursorIndex int
+	drawn bool
 	appstate *util.AppState
 }
 
 func NewMenuBar(appstate *util.AppState) *MenuBar {
-	return &MenuBar{false, false, 0, appstate}
+	return &MenuBar{false, false, 0, false, appstate}
 }
 
 func (elem *MenuBar) Draw() {
 	if elem.hidden {
+		return
+	}
+
+	// Don't update if not active and already drawn
+	if !elem.active && elem.drawn {
 		return
 	}
 
@@ -53,6 +59,8 @@ func (elem *MenuBar) Draw() {
 
 	// Draw Divider
 	drawHorizontalLine(appstate.Screen, 0, scr_w, MENUBAR_ENDROW, appstate.BarStyle)
+
+	elem.drawn = true
 }
 
 func (elem *MenuBar) IsActive() bool {
@@ -65,6 +73,7 @@ func (elem *MenuBar) Focus() {
 
 func (elem *MenuBar) Unfocus() {
 	elem.active = false
+	elem.drawn = false // update it one last time to update active button
 }
 
 func (elem *MenuBar) GetCursorIndex() int {
@@ -90,6 +99,7 @@ func (elem *MenuBar) IsHidden() bool {
 
 func (elem *MenuBar) Hide() {
 	elem.hidden = true
+	elem.drawn = false
 }
 
 func (elem *MenuBar) Show() {

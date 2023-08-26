@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"github.com/gdamore/tcell/v2"
 	"github.com/Rye123/notepad--/util"
@@ -17,6 +18,7 @@ type Textbox struct {
 	cursorY int
 	leftIndex int // x-coordinate of leftmost index, to allow horizontal scrolling for non-wordwrapped text
 	buf textbuffer.TextBuffer
+	drawn bool // True if element has been drawn already
 	appstate *util.AppState
 }
 
@@ -28,6 +30,7 @@ func NewTextbox(appstate *util.AppState) *Textbox {
 		0, 0,
 		0,
 		appstate.TextBuffer,
+		false,
 		appstate,
 	}
 
@@ -40,11 +43,17 @@ func (elem *Textbox) Draw() {
 		return
 	}
 
+	// Don't update if it's not active and already drawn
+	if !elem.active && elem.drawn {
+		return
+	}
+
 	appstate := elem.appstate
 	scr_w, scr_h := appstate.Screen.Size()
 	scr_w--; scr_h--
 
 	startRow, endRow := TEXTBOX_STARTROW, scr_h - 2
+	
 	rows := make([]string, endRow - startRow + 1)
 
 	// While GetCursorXY returns the true X and Y coordinates of the cursor, if word-wrapped is enabled, we need to calculate the view X and Y coordinates of the cursor.
@@ -142,13 +151,15 @@ func (elem *Textbox) Draw() {
 		if startRow + i > endRow {
 			break
 		}
-		drawText(appstate.Screen, 0, TEXTBOX_STARTROW + i, scr_w, TEXTBOX_STARTROW + i, appstate.TextboxStyle, str)
+		drawText(appstate.Screen, 0, TEXTBOX_STARTROW + i, scr_w, TEXTBOX_STARTROW + i, appstate.TextboxStyle, fmt.Sprintf("%-*s", scr_w, str))
 	}
 
 	// Show Cursor
 	if elem.active {
 		appstate.Screen.ShowCursor(cursorX, cursorY)
 	}
+
+	elem.drawn = true
 }
 
 func (elem *Textbox) IsActive() bool {
@@ -161,6 +172,7 @@ func (elem *Textbox) Focus() {
 
 func (elem *Textbox) Unfocus() {
 	elem.active = false
+	elem.appstate.Screen.HideCursor()
 }
 
 func (elem *Textbox) GetCursorIndex() int {
@@ -201,6 +213,7 @@ func (elem *Textbox) IsHidden() bool {
 
 func (elem *Textbox) Hide() {
 	elem.hidden = true
+	elem.drawn = false
 }
 
 func (elem *Textbox) Show() {
