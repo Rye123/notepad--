@@ -1,7 +1,6 @@
 package tui
 
 import (
-	"github.com/Rye123/notepad--/util"
 	"github.com/gdamore/tcell/v2"
 )
 
@@ -15,6 +14,7 @@ type TUIElem interface {
 	IsHidden() bool
 	Hide() // Hides the element
 	Show() // Shows the element
+	HandleKey(keyEvent *tcell.EventKey)
 }
 
 /* HELPER FUNCTIONS */

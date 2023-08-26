@@ -2,6 +2,7 @@ package tui
 
 import (
 	"strings"
+	"github.com/gdamore/tcell/v2"
 	"github.com/Rye123/notepad--/util"
 	"github.com/Rye123/notepad--/textbuffer"
 )
@@ -12,6 +13,8 @@ type Textbox struct {
 	hidden bool
 	active bool // True if this element is focused on
 	cursorIndex int // Current position of the cursorIndex in the buffer
+	cursorX int
+	cursorY int
 	leftIndex int // x-coordinate of leftmost index, to allow horizontal scrolling for non-wordwrapped text
 	buf textbuffer.TextBuffer
 	appstate *util.AppState
@@ -21,7 +24,9 @@ func NewTextbox(appstate *util.AppState) *Textbox {
 	textbox := Textbox{
 		false,
 		true,
+		0,
 		0, 0,
+		0,
 		appstate.TextBuffer,
 		appstate,
 	}
@@ -173,6 +178,9 @@ func (elem *Textbox) SetCursorIndex(newCursorIndex int) {
 	elem.buf.MoveIndex(newCursorIndex)
 	elem.cursorIndex = newCursorIndex
 
+	// Update true cursorXY
+	elem.UpdateCursorXY()
+
 	// Update left accordingly
 	cursorX, _ := elem.GetCursorXY()
 	scr_w, _ := elem.appstate.Screen.Size()
@@ -199,6 +207,47 @@ func (elem *Textbox) Show() {
 	elem.hidden = false
 }
 
+func (elem *Textbox) HandleKey(keyEvent *tcell.EventKey) {
+	if !elem.IsActive() {
+		return
+	}
+	key, ch := keyEvent.Key(), keyEvent.Rune()
+	
+	// Arrow Keys: Move cursor index
+	switch key {
+	case tcell.KeyLeft:
+		elem.SetCursorIndex(elem.GetCursorIndex() - 1)
+		return
+	case tcell.KeyRight:
+		elem.SetCursorIndex(elem.GetCursorIndex() + 1)
+		return
+	case tcell.KeyUp:
+		//TODO: Go up based on sticky x
+		return
+	case tcell.KeyDown:
+		//TODO: Go down based on sticky x
+		return
+	}
+
+	// Non-control keys
+	switch key {
+	case tcell.KeyBackspace, tcell.KeyBackspace2:
+		elem.Backspace()
+	case tcell.KeyDelete:
+		elem.Delete()
+	case tcell.KeyEnter:
+		elem.Insert('\n')
+	case tcell.KeyTab:
+		elem.Insert('\t')
+	default:
+		elem.Insert(ch)
+	}
+
+	if !elem.appstate.FileModified {
+		elem.appstate.FileModified = true
+	}
+}
+
 
 func (elem *Textbox) Content() string {
 	return elem.buf.String()
@@ -211,16 +260,14 @@ func (elem *Textbox) GetLeft() int {
 
 // Returns the true X and Y coordinates of the cursor
 func (elem *Textbox) GetCursorXY() (x int, y int) {
-	// Don't compute all that if not active
-	if !elem.active {
-		return 0, 0
-	}
-	
+	return elem.cursorX, elem.cursorY
+}
+
+func (elem *Textbox) UpdateCursorXY() {
 	// x is number of characters in last line, y is number of lines
 	lines := strings.Split(elem.buf.StringBeforeIndex(), "\n")
-	x = len(lines[len(lines) - 1])
-	y = len(lines) - 1
-	return x, y
+	elem.cursorX = len(lines[len(lines) - 1])
+	elem.cursorY = len(lines) - 1
 }
 
 func (elem *Textbox) Insert(key rune) {

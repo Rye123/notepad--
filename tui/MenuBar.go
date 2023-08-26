@@ -1,6 +1,9 @@
 package tui
 
-import "github.com/Rye123/notepad--/util"
+import (
+	"github.com/gdamore/tcell/v2"
+	"github.com/Rye123/notepad--/util"
+)
 
 const MENUBAR_STARTROW = 2
 const MENUBAR_ENDROW = 3
@@ -91,6 +94,38 @@ func (elem *MenuBar) Hide() {
 
 func (elem *MenuBar) Show() {
 	elem.hidden = false
+}
+
+func (elem *MenuBar) HandleKey(keyEvent *tcell.EventKey) {
+	if !elem.IsActive() {
+		return
+	}
+	key, ch := keyEvent.Key(), keyEvent.Rune()
+	
+	// Arrow Keys: Move cursor index
+	if key == tcell.KeyLeft {
+		elem.SetCursorIndex(elem.GetCursorIndex() - 1)
+	} else if key == tcell.KeyRight {
+		elem.SetCursorIndex(elem.GetCursorIndex() + 1)
+	} else if key == tcell.KeyUp {
+		//TODO: Navigate internal menu of current active button
+	} else if key == tcell.KeyDown {
+		//TODO: Navigate internal menu of current active button
+	}
+
+	// Handles Runes
+	switch ch {
+	case 'f', 'F':
+		elem.SetCursorIndex(0) // File
+	case 'e', 'E':
+		elem.SetCursorIndex(1) // Edit
+	case 'o', 'O':
+		elem.SetCursorIndex(2) // Format
+	case 'v', 'V':
+		elem.SetCursorIndex(3) // View
+	case 'h', 'H':
+		elem.SetCursorIndex(4) // Help
+	}
 }
 
 

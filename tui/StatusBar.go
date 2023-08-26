@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"github.com/gdamore/tcell/v2"
 	"github.com/Rye123/notepad--/util"
 )
 
@@ -47,7 +48,7 @@ func (elem *StatusBar) Focus() {
 }
 
 func (elem *StatusBar) Unfocus() {
-	panic("not implemented")
+	return
 }
 
 func (elem *StatusBar) GetCursorIndex() int {
@@ -68,4 +69,8 @@ func (elem *StatusBar) Hide() {
 
 func (elem *StatusBar) Show() {
 	elem.hidden = false
+}
+
+func (elem *StatusBar) HandleKey(keyEvent *tcell.EventKey) {
+	return
 }

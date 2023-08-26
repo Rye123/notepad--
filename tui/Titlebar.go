@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"github.com/gdamore/tcell/v2"
 	"github.com/Rye123/notepad--/util"
 )
 
@@ -53,7 +54,7 @@ func (elem *TitleBar) Focus() {
 }
 
 func (elem *TitleBar) Unfocus() {
-	panic("not implemented")
+	return
 }
 
 func (elem *TitleBar) GetCursorIndex() int {
@@ -76,3 +77,6 @@ func (elem *TitleBar) Show() {
 	elem.hidden = false
 }
 
+func (elem *TitleBar) HandleKey(keyEvent *tcell.EventKey) {
+	return
+}

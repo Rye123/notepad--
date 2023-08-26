@@ -95,6 +95,27 @@ func InitialiseAppState(screen tcell.Screen, filename string, options Options) *
 	return &appstate
 }
 
+// Saves the current textbuffer to disk. An error is returned if the save was unsuccessful. Note that saving an unmodified file is considered a "success".
+func (appstate *AppState) Save() error{
+	if !appstate.FileModified {
+		return nil
+	}
+	
+	err := os.WriteFile(
+		appstate.Filename,
+		[]byte(appstate.TextBuffer.String()),
+		0660, // R/W for Owner and Group
+	)
+	
+	if err == nil {
+		appstate.FileModified = false
+	}
+	
+	return err
+}
+
+// 
+
 // Used to generate a temporary title if no file was used
 func GetTemporaryTitle(content string) string {
 	title, _, _ := strings.Cut(content, "\n")
